@@ -1,0 +1,10 @@
+.boards-manager {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Ensure full height for board views */
+.boards-manager > * {
+  height: 100%;
+}

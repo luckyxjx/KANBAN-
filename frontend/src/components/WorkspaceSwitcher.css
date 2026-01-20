@@ -1,0 +1,148 @@
+.workspace-switcher {
+  position: relative;
+  display: inline-block;
+}
+
+.workspace-switcher.loading,
+.workspace-switcher.empty,
+.workspace-switcher.single {
+  padding: 8px 12px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.workspace-selector {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.workspace-selector:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.workspace-selector:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.workspace-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workspace-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.workspace-name {
+  flex: 1;
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.workspace-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.workspace-option {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+  text-align: left;
+}
+
+.workspace-option .workspace-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.workspace-option:hover {
+  background: var(--hover-color);
+}
+
+.workspace-option.selected {
+  background: var(--primary-color-light);
+  color: var(--primary-color);
+}
+
+.workspace-option:focus {
+  outline: none;
+  background: var(--hover-color);
+}
+
+.workspace-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.workspace-option .workspace-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.workspace-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.selected-indicator {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.workspace-dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: transparent;
+}
