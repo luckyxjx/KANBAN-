@@ -1,144 +1,45 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useWorkspace } from '../contexts/WorkspaceContext';
-import { useAuth } from '../contexts/AuthContext';
-import WorkspaceSwitcher from './WorkspaceSwitcher';
-import CreateWorkspaceForm from './CreateWorkspaceForm';
-import { WorkspaceIcon, LoadingIcon, PlusIcon } from './icons';
-import './WorkspaceGuard.css';
+import WorkspaceSelectorModal from './WorkspaceSelectorModal';
 
 interface WorkspaceGuardProps {
   children: React.ReactNode;
   requireWorkspace?: boolean;
 }
 
+/**
+ * WorkspaceGuard enforces workspace context requirement (Requirement 2.7)
+ * 
+ * When a user has access to multiple workspaces, this component requires
+ * explicit workspace selection before allowing access to workspace-specific resources.
+ */
 const WorkspaceGuard: React.FC<WorkspaceGuardProps> = ({ 
   children, 
-  requireWorkspace = true 
+  requireWorkspace = false 
 }) => {
-  const { isAuthenticated } = useAuth();
-  const { 
-    currentWorkspace, 
-    workspaces, 
-    loading, 
-    error,
-    requireWorkspaceSelection 
-  } = useWorkspace();
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const { currentWorkspace, requireWorkspaceSelection, workspaces, loading } = useWorkspace();
 
-  // Don't render anything if user is not authenticated
-  if (!isAuthenticated) {
-    return null;
+  // If workspace selection is required, show the selector modal
+  if (requireWorkspaceSelection && workspaces.length > 1) {
+    return <WorkspaceSelectorModal workspaces={workspaces} />;
   }
 
-  // Show loading state
+  // If workspace is required but none is selected and we're not loading
+  if (requireWorkspace && !currentWorkspace && !loading) {
+    return <WorkspaceSelectorModal workspaces={workspaces} />;
+  }
+
+  // If still loading, show loading state
   if (loading) {
     return (
-      <div className="workspace-guard loading">
-        <LoadingIcon size={40} />
-        <p>Loading workspaces...</p>
+      <div className="workspace-guard-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading workspace...</p>
       </div>
     );
   }
 
-  // Show error state
-  if (error) {
-    return (
-      <div className="workspace-guard error">
-        <div className="error-icon">⚠️</div>
-        <h3>Error Loading Workspaces</h3>
-        <p>{error}</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="retry-button"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  // Show workspace creation prompt if no workspaces exist
-  if (workspaces.length === 0) {
-    return (
-      <div className="workspace-guard no-workspaces">
-        <div className="no-workspaces-content">
-          <div className="workspace-icon-large">
-            <WorkspaceIcon size={64} />
-          </div>
-          <h2>Welcome to Multi-Tenant Kanban!</h2>
-          <p>
-            To get started, you'll need to create your first workspace. 
-            Workspaces help you organize your projects and collaborate with your team.
-          </p>
-          <button 
-            onClick={() => setShowCreateForm(true)}
-            className="create-workspace-button primary"
-          >
-            <PlusIcon size={16} />
-            Create Your First Workspace
-          </button>
-        </div>
-
-        {showCreateForm && (
-          <CreateWorkspaceForm
-            onClose={() => setShowCreateForm(false)}
-            onSuccess={() => setShowCreateForm(false)}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // Show workspace selection prompt if multiple workspaces and none selected
-  if (requireWorkspace && requireWorkspaceSelection) {
-    return (
-      <div className="workspace-guard workspace-selection">
-        <div className="workspace-selection-content">
-          <div className="workspace-icon-large">
-            <WorkspaceIcon size={64} />
-          </div>
-          <h2>Select a Workspace</h2>
-          <p>
-            You have access to multiple workspaces. Please select one to continue.
-          </p>
-          
-          <div className="workspace-selection-controls">
-            <WorkspaceSwitcher />
-            <button 
-              onClick={() => setShowCreateForm(true)}
-              className="create-workspace-button secondary"
-            >
-              <PlusIcon size={14} />
-              Create New Workspace
-            </button>
-          </div>
-        </div>
-
-        {showCreateForm && (
-          <CreateWorkspaceForm
-            onClose={() => setShowCreateForm(false)}
-            onSuccess={() => setShowCreateForm(false)}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // Show workspace selection warning if workspace is required but not selected
-  if (requireWorkspace && !currentWorkspace) {
-    return (
-      <div className="workspace-guard workspace-required">
-        <div className="workspace-required-content">
-          <div className="warning-icon">⚠️</div>
-          <h3>Workspace Required</h3>
-          <p>Please select a workspace to access this feature.</p>
-          <WorkspaceSwitcher />
-        </div>
-      </div>
-    );
-  }
-
-  // Render children if all workspace requirements are met
+  // Render children if workspace context is satisfied
   return <>{children}</>;
 };
 

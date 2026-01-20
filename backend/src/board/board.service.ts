@@ -1,13 +1,13 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkspaceService } from '../workspace/workspace.service';
 import { ActivityService } from '../activity/activity.service';
+import { RealtimeService } from '../websocket/realtime.service';
 import { WorkspaceQueryHelper } from '../workspace/helpers/workspace-query.helper';
 import {
   CreateBoardDto,
@@ -30,6 +30,7 @@ export class BoardService {
     private prisma: PrismaService,
     private workspaceService: WorkspaceService,
     private activityService: ActivityService,
+    private realtimeService: RealtimeService,
   ) {}
 
   /**
@@ -58,7 +59,7 @@ export class BoardService {
       `Board created: ${board.id} in workspace: ${workspaceId} by user: ${userId}`,
     );
 
-    // Log activity
+    // Log activity and broadcast event
     await this.activityService.logBoardActivity(
       userId,
       workspaceId,
@@ -70,6 +71,16 @@ export class BoardService {
         color: board.color,
       },
     );
+
+    // Broadcast board creation event
+    await this.realtimeService.broadcastBoardEvent({
+      type: 'board.created',
+      boardId: board.id,
+      workspaceId,
+      userId,
+      data: board,
+      timestamp: new Date(),
+    });
 
     this.logger.log(`Returning board: ${JSON.stringify(board)}`);
     return board;
@@ -194,6 +205,16 @@ export class BoardService {
         'updated',
         { changes },
       );
+
+      // Broadcast board update event
+      await this.realtimeService.broadcastBoardEvent({
+        type: 'board.updated',
+        boardId,
+        workspaceId,
+        userId,
+        data: board,
+        timestamp: new Date(),
+      });
     }
 
     return board;
@@ -237,6 +258,16 @@ export class BoardService {
           color: board.color,
         },
       );
+
+      // Broadcast board deletion event
+      await this.realtimeService.broadcastBoardEvent({
+        type: 'board.deleted',
+        boardId,
+        workspaceId,
+        userId,
+        data: board,
+        timestamp: new Date(),
+      });
     }
 
     // Delete board (cascade will handle lists, cards, and activity records)
@@ -292,7 +323,7 @@ export class BoardService {
       `List created: ${list.id} in board: ${boardId} by user: ${userId}`,
     );
 
-    // Log activity
+    // Log activity and broadcast event
     await this.activityService.logListActivity(
       userId,
       workspaceId,
@@ -304,6 +335,16 @@ export class BoardService {
         position: list.position,
       },
     );
+
+    // Broadcast list creation event
+    await this.realtimeService.broadcastListEvent({
+      type: 'list.created',
+      listId: list.id,
+      workspaceId,
+      userId,
+      data: list,
+      timestamp: new Date(),
+    });
 
     return list;
   }
@@ -368,6 +409,16 @@ export class BoardService {
           },
         },
       );
+
+      // Broadcast list update event
+      await this.realtimeService.broadcastListEvent({
+        type: 'list.updated',
+        listId,
+        workspaceId,
+        userId,
+        data: list,
+        timestamp: new Date(),
+      });
     }
 
     return list;
@@ -431,11 +482,23 @@ export class BoardService {
       },
     );
 
-    // Return updated lists
-    return this.prisma.list.findMany({
+    // Broadcast list reorder event
+    const updatedLists = await this.prisma.list.findMany({
       where: { boardId },
       orderBy: { position: 'asc' },
     });
+
+    await this.realtimeService.broadcastListEvent({
+      type: 'list.reordered',
+      listId: boardId, // Use boardId as the entity for reorder events
+      workspaceId,
+      userId,
+      data: { listIds: dto.listIds, lists: updatedLists },
+      timestamp: new Date(),
+    });
+
+    // Return updated lists
+    return updatedLists;
   }
 
   /**
@@ -474,6 +537,16 @@ export class BoardService {
           position: list.position,
         },
       );
+
+      // Broadcast list deletion event
+      await this.realtimeService.broadcastListEvent({
+        type: 'list.deleted',
+        listId,
+        workspaceId,
+        userId,
+        data: list,
+        timestamp: new Date(),
+      });
     }
 
     // Delete list (cascade will handle cards)
@@ -530,7 +603,7 @@ export class BoardService {
       `Card created: ${card.id} in list: ${listId} by user: ${userId}`,
     );
 
-    // Log activity
+    // Log activity and broadcast event
     await this.activityService.logCardActivity(
       userId,
       workspaceId,
@@ -543,6 +616,16 @@ export class BoardService {
         position: card.position,
       },
     );
+
+    // Broadcast card creation event
+    await this.realtimeService.broadcastCardEvent({
+      type: 'card.created',
+      cardId: card.id,
+      workspaceId,
+      userId,
+      data: card,
+      timestamp: new Date(),
+    });
 
     return card;
   }
@@ -614,6 +697,16 @@ export class BoardService {
         'updated',
         { changes },
       );
+
+      // Broadcast card update event
+      await this.realtimeService.broadcastCardEvent({
+        type: 'card.updated',
+        cardId,
+        workspaceId,
+        userId,
+        data: card,
+        timestamp: new Date(),
+      });
     }
 
     return card;
@@ -750,6 +843,22 @@ export class BoardService {
       },
     );
 
+    // Broadcast card move event
+    await this.realtimeService.broadcastCardEvent({
+      type: 'card.moved',
+      cardId,
+      workspaceId,
+      userId,
+      data: {
+        ...card,
+        fromListId: currentCard.listId,
+        toListId: dto.targetListId,
+        fromPosition: currentCard.position,
+        toPosition: dto.position,
+      },
+      timestamp: new Date(),
+    });
+
     return card;
   }
 
@@ -811,11 +920,24 @@ export class BoardService {
       },
     );
 
-    // Return updated cards
-    return this.prisma.card.findMany({
+    // Get updated cards
+    const updatedCards = await this.prisma.card.findMany({
       where: { listId },
       orderBy: { position: 'asc' },
     });
+
+    // Broadcast card reorder event
+    await this.realtimeService.broadcastCardEvent({
+      type: 'card.moved', // Use 'card.moved' for reorder events
+      cardId: listId, // Use listId as the entity for reorder events
+      workspaceId,
+      userId,
+      data: { cardIds: dto.cardIds, cards: updatedCards },
+      timestamp: new Date(),
+    });
+
+    // Return updated cards
+    return updatedCards;
   }
 
   /**
@@ -855,6 +977,16 @@ export class BoardService {
           position: card.position,
         },
       );
+
+      // Broadcast card deletion event
+      await this.realtimeService.broadcastCardEvent({
+        type: 'card.deleted',
+        cardId,
+        workspaceId,
+        userId,
+        data: card,
+        timestamp: new Date(),
+      });
     }
 
     // Delete card

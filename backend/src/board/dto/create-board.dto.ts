@@ -1,7 +1,8 @@
-import { IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, MinLength, Matches } from 'class-validator';
 
 export class CreateBoardDto {
   @IsString()
+  @MinLength(1)
   @MaxLength(100)
   name: string;
 
@@ -12,6 +13,6 @@ export class CreateBoardDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(7)
+  @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'color must be a valid hex color code' })
   color?: string;
 }

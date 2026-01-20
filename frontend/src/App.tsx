@@ -3,6 +3,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { BoardProvider } from './contexts/BoardContext';
+import { WebSocketProvider } from './contexts/WebSocketContext';
+import { ActivityProvider } from './contexts/ActivityContext';
 import { DemoDataProvider } from './contexts/DemoDataProvider';
 import { ToastProvider } from './components/ToastContainer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -45,9 +47,13 @@ function App() {
         <AuthProvider>
           <WorkspaceProvider>
             <BoardProvider>
-              <ToastProvider>
-                <AppContent />
-              </ToastProvider>
+              <WebSocketProvider>
+                <ActivityProvider>
+                  <ToastProvider>
+                    <AppContent />
+                  </ToastProvider>
+                </ActivityProvider>
+              </WebSocketProvider>
             </BoardProvider>
           </WorkspaceProvider>
         </AuthProvider>

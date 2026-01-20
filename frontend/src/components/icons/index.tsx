@@ -244,6 +244,13 @@ export const ArrowDownIcon: React.FC<IconProps> = ({ className, color = 'current
   </svg>
 );
 
+// Chevron Down Icon - Custom designed
+export const ChevronDownIcon: React.FC<IconProps> = ({ className, color = 'currentColor', size = 24 }) => (
+  <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M6 9l6 6 6-6" stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 // Theme/Moon Icon - Custom designed
 export const MoonIcon: React.FC<IconProps> = ({ className, color = 'currentColor', size = 24 }) => (
   <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none">

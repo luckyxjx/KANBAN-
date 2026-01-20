@@ -1,95 +1,69 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '../contexts/WorkspaceContext';
-import { WorkspaceIcon, ArrowDownIcon, CheckIcon } from './icons';
-import type { Workspace } from '../types/workspace';
+import { ChevronDownIcon } from './icons';
 import './WorkspaceSwitcher.css';
 
 const WorkspaceSwitcher: React.FC = () => {
-  const { currentWorkspace, workspaces, setCurrentWorkspace, loading } = useWorkspace();
+  const { currentWorkspace, workspaces, setCurrentWorkspace } = useWorkspace();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleWorkspaceSelect = (workspace: Workspace) => {
-    setCurrentWorkspace(workspace);
-    setIsOpen(false);
+  const handleWorkspaceChange = (workspaceId: string) => {
+    const workspace = workspaces.find(w => w.id === workspaceId);
+    if (workspace) {
+      setCurrentWorkspace(workspace);
+      setIsOpen(false);
+    }
   };
 
-  if (loading) {
+  if (!currentWorkspace) {
     return (
-      <div className="workspace-switcher loading">
-        <span>Loading workspaces...</span>
-      </div>
-    );
-  }
-
-  if (workspaces.length === 0) {
-    return (
-      <div className="workspace-switcher empty">
-        <span>No workspaces available</span>
-      </div>
-    );
-  }
-
-  if (workspaces.length === 1) {
-    return (
-      <div className="workspace-switcher single">
-        <div className="workspace-display">
-          <WorkspaceIcon size={16} />
-          <span className="workspace-name">{workspaces[0].name}</span>
-        </div>
+      <div className="workspace-switcher">
+        <button className="switcher-button" disabled>
+          No workspace selected
+        </button>
       </div>
     );
   }
 
   return (
     <div className="workspace-switcher">
-      <button 
-        className="workspace-selector"
+      <button
+        className="switcher-button"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        aria-haspopup="listbox"
       >
-        <div className="workspace-display">
-          <WorkspaceIcon size={16} />
-          <span className="workspace-name">
-            {currentWorkspace ? currentWorkspace.name : 'Select Workspace'}
-          </span>
-          <ArrowDownIcon size={12} className={`dropdown-arrow ${isOpen ? 'open' : ''}`} />
-        </div>
+        <span className="workspace-name">{currentWorkspace.name}</span>
+        <ChevronDownIcon size={16} className={`chevron ${isOpen ? 'open' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="workspace-dropdown" role="listbox">
-          {workspaces.map((workspace) => (
-            <button
-              key={workspace.id}
-              className={`workspace-option ${
-                currentWorkspace?.id === workspace.id ? 'selected' : ''
-              }`}
-              onClick={() => handleWorkspaceSelect(workspace)}
-              role="option"
-              aria-selected={currentWorkspace?.id === workspace.id}
-            >
-              <WorkspaceIcon size={16} />
-              <div className="workspace-info">
-                <span className="workspace-name">{workspace.name}</span>
-                {workspace.description && (
-                  <span className="workspace-description">{workspace.description}</span>
-                )}
-              </div>
-              {currentWorkspace?.id === workspace.id && (
-                <CheckIcon size={16} className="selected-indicator" />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Overlay to close dropdown when clicking outside */}
-      {isOpen && (
-        <div 
-          className="workspace-dropdown-overlay"
-          onClick={() => setIsOpen(false)}
-        />
+        <>
+          <div className="switcher-dropdown">
+            <div className="dropdown-header">
+              <span className="dropdown-title">Switch Workspace</span>
+            </div>
+            <div className="workspace-list">
+              {workspaces.map(workspace => (
+                <button
+                  key={workspace.id}
+                  className={`workspace-option ${
+                    workspace.id === currentWorkspace.id ? 'active' : ''
+                  }`}
+                  onClick={() => handleWorkspaceChange(workspace.id)}
+                >
+                  <span className="workspace-option-name">{workspace.name}</span>
+                  {workspace.id === currentWorkspace.id && (
+                    <span className="checkmark">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div
+            className="switcher-overlay"
+            onClick={() => setIsOpen(false)}
+          />
+        </>
       )}
     </div>
   );

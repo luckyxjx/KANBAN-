@@ -5,6 +5,8 @@ import { useAuthErrorHandler } from '../hooks/useAuthErrorHandler';
 import WorkspaceGuard from './WorkspaceGuard';
 import WorkspaceNavigation from './WorkspaceNavigation';
 import BoardsManager from './BoardsManager';
+import ActivityFeed from './ActivityFeed';
+import ConnectionStatus from './ConnectionStatus';
 import { DashboardIcon, ActivityIcon, MembersIcon, SettingsIcon } from './icons';
 import './Dashboard.css';
 
@@ -21,13 +23,7 @@ const Dashboard: React.FC = () => {
       case 'boards':
         return <BoardsManager />;
       case 'activity':
-        return (
-          <div className="tab-content-placeholder">
-            <ActivityIcon size={64} />
-            <h3>Activity Feed</h3>
-            <p>Activity tracking coming soon</p>
-          </div>
-        );
+        return <ActivityFeed />;
       case 'members':
         return (
           <div className="tab-content-placeholder">
@@ -56,10 +52,15 @@ const Dashboard: React.FC = () => {
         
         <main className="dashboard-main">
           <div className="welcome-section">
-            <h2>Welcome back, {user?.name}!</h2>
-            {currentWorkspace && (
-              <p>You're working in the <strong>{currentWorkspace.name}</strong> workspace.</p>
-            )}
+            <div className="welcome-header">
+              <div>
+                <h2>Welcome back, {user?.name}!</h2>
+                {currentWorkspace && (
+                  <p>You're working in the <strong>{currentWorkspace.name}</strong> workspace.</p>
+                )}
+              </div>
+              <ConnectionStatus />
+            </div>
           </div>
           
           <div className="workspace-content">

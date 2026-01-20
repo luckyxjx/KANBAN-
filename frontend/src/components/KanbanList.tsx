@@ -5,7 +5,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { PlusIcon, SettingsIcon } from './icons';
+import { SettingsIcon } from './icons';
 import KanbanCard from './KanbanCard';
 import ListSettingsMenu from './ListSettingsMenu';
 import type { List, Card, UpdateListData } from '../types/board';

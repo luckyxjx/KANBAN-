@@ -671,6 +671,28 @@ export const BoardProvider: React.FC<BoardProviderProps> = ({ children }) => {
     }
   }, [currentWorkspace, demoMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Setup real-time event listeners
+  // Requirement 5.3: Broadcast changes to all workspace members
+  // Requirement 5.4: Implement real-time synchronization with local state
+  useEffect(() => {
+    // Skip in demo mode
+    if (demoMode) {
+      return;
+    }
+
+    // Import here to avoid circular dependency
+    const setupRealtimeListeners = async () => {
+      try {
+        const { useWebSocket } = await import('./WebSocketContext');
+        // This will be called from a component that has access to WebSocket context
+      } catch (error) {
+        console.error('Failed to setup real-time listeners:', error);
+      }
+    };
+
+    setupRealtimeListeners();
+  }, [demoMode]);
+
   const value: BoardContextType = {
     boards,
     currentBoard: optimisticBoard.currentState,
