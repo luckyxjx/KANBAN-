@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useBoard } from '../contexts/BoardContext';
 import { useToast } from '../components/ToastContainer';
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import { ArrowDownIcon, PlusIcon, SettingsIcon } from './icons';
 import KanbanList from './KanbanList';
 import KanbanCard from './KanbanCard';
@@ -54,6 +55,10 @@ const BoardView: React.FC<BoardViewProps> = ({ board, onBack }) => {
   const [showCreateCard, setShowCreateCard] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<Card | null>(null);
   const [draggedCard, setDraggedCard] = useState<Card | null>(null);
+
+  // Setup real-time synchronization
+  // Requirement 5.4: Implement real-time synchronization with local state
+  useRealtimeSync();
 
   // Configure drag sensors with better sensitivity
   const sensors = useSensors(

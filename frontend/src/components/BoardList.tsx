@@ -111,8 +111,10 @@ const BoardList: React.FC<BoardListProps> = ({ onBoardSelect }) => {
       {showCreateForm && (
         <CreateBoardForm
           onClose={() => setShowCreateForm(false)}
-          onSuccess={(board) => {
+          onSuccess={async (board) => {
             setShowCreateForm(false);
+            // Wait a bit for the board to be fully created
+            await new Promise(resolve => setTimeout(resolve, 100));
             onBoardSelect(board);
           }}
         />
