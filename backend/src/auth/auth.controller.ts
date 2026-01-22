@@ -28,27 +28,32 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
-    const user = req.user as User;
-    
-    if (!user) {
-      throw new UnauthorizedException('Authentication failed');
+    try {
+      const user = req.user as User;
+      
+      if (!user) {
+        throw new UnauthorizedException('Authentication failed');
+      }
+
+      // Generate JWT token with 1 hour expiration
+      const token = await this.authService.generateJWT(user);
+
+      // Set httpOnly cookie with JWT and security settings
+      res.cookie('access_token', token, {
+        httpOnly: true, // Prevents JavaScript access
+        secure: this.configService.get('NODE_ENV') === 'production', // HTTPS only in production
+        sameSite: 'lax', // CSRF protection
+        maxAge: 60 * 60 * 1000, // 1 hour (matches JWT expiration)
+        path: '/', // Available for all routes
+      });
+
+      // Redirect to frontend
+      const frontendUrl = this.configService.get('FRONTEND_URL');
+      res.redirect(`${frontendUrl}/dashboard`);
+    } catch (error) {
+      console.error('Google callback error:', error);
+      res.status(500).send('Authentication failed');
     }
-
-    // Generate JWT token with 1 hour expiration
-    const token = await this.authService.generateJWT(user);
-
-    // Set httpOnly cookie with JWT and security settings
-    res.cookie('access_token', token, {
-      httpOnly: true, // Prevents JavaScript access
-      secure: this.configService.get('NODE_ENV') === 'production', // HTTPS only in production
-      sameSite: 'lax', // CSRF protection
-      maxAge: 60 * 60 * 1000, // 1 hour (matches JWT expiration)
-      path: '/', // Available for all routes
-    });
-
-    // Redirect to frontend
-    const frontendUrl = this.configService.get('FRONTEND_URL');
-    res.redirect(`${frontendUrl}/dashboard`);
   }
 
   @Get('me')
